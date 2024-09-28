@@ -19,7 +19,7 @@
         <div class="container">
             <h1>Upload Image for Caption Generation</h1>
             <div class="row">
-                <form id="upload-form" class="col s12">
+                <form id="upload-form" class="col s12" onsubmit="return false;"> <!-- Prevent form submission -->
                     <div class="file-field input-field">
                         <div class="btn">
                             <span>Upload Image</span>
@@ -31,7 +31,7 @@
                         </div>
                     </div>
                     <div class="input-field col s12">
-                        <button class="btn waves-effect waves-light" type="submit">Generate Caption</button>
+                        <button class="btn waves-effect waves-light" id="generate-caption-btn">Generate Caption</button>
                     </div>
                 </form>
             </div>
@@ -43,6 +43,8 @@
     </main>
     <!-- Materialize JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <!-- Socket.IO -->
+    <script src="/socket.io/socket.io.js"></script>
     <!-- Custom JS -->
     <script src="script.js"></script>
 </body>

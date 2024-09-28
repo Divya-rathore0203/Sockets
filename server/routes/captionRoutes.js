@@ -1,7 +1,7 @@
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
-const { generateCaption, getCaptions } = require('../controllers/captionController');
+const { saveCaption } = require('../controllers/captionController');  // Destructure saveCaption
 
 const router = express.Router();
 
@@ -16,8 +16,11 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// Routes
-router.post('/generate-caption', upload.single('image'), generateCaption);
-router.get('/captions', getCaptions);
+// Define the routes
+router.post('/upload', upload.single('image'), saveCaption);  // Correctly use saveCaption
+
+router.get('/test', (req, res) => {
+    res.send('Test route working');
+});
 
 module.exports = router;

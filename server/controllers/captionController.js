@@ -1,43 +1,40 @@
 const Caption = require('../models/Caption');
 
-// Generate caption
-const generateCaption = (req, res) => {
-   
-    if (!req.file) {
-        console.log('No file uploaded'); // Log in case of no file
-        return res.status(400).json({ error: 'No file uploaded.' });
-    }
+// Simulated caption generation function
+const generateCaption = (imagePath) => {
+    return "Every Picture Tells a story What is yours ?";
+};
 
-    // Log the uploaded file details
-    console.log('File uploaded successfully:', req.file);
+// Controller function to handle file upload, generate caption, and save to database
+const saveCaption = async (req, res) => {
+    try {
+        if (!req.file) {
+            throw new Error('No file uploaded');
+        }
 
-    // Placeholder logic for generating a caption
-    const generatedCaption = 'Every picture tells a story, what is yours?';
+        const imageUrl = `/uploads/${req.file.filename}`;
+        const generatedCaption = generateCaption(req.file.path);
 
-    // Create a new Caption instance 
-    const newCaption = new Caption({
-        caption: generatedCaption,
-        imageUrl: req.file.path,
-    });
-
-    // Save the caption to MongoDB
-    newCaption.save()
-        .then(() => {
-            console.log('Caption saved to database.'); // Log if saving was successful
-            return res.json({ caption: generatedCaption, imageUrl: req.file.path });
-        })
-        .catch((err) => {
-            console.error('Error saving caption:', err); // Log any error that occurs while saving
-            return res.status(500).json({ error: err.message });
+        const newCaption = new Caption({
+            imageUrl: imageUrl,
+            caption: generatedCaption
         });
+
+        await newCaption.save();
+        console.log('Caption saved to database.');
+
+        req.io.emit('captionSaved', { imageUrl, caption: generatedCaption });
+
+        res.status(200).json({
+            message: 'Caption saved successfully',
+            caption: generatedCaption,
+            imageUrl: imageUrl
+        });
+    } catch (error) {
+        console.error('Error saving caption:', error);
+        res.status(500).json({ error: 'Error saving caption.' });
+    }
 };
 
-// Get all captions from the database
-const getCaptions = (req, res) => {
-    Caption.find()
-        .then((captions) => res.json(captions))
-        .catch((err) => res.status(500).json({ error: err.message }));
-};
-
-// Export both functions
-module.exports = { generateCaption, getCaptions };
+// Export the `saveCaption` function directly
+module.exports = { saveCaption };

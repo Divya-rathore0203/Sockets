@@ -1,56 +1,57 @@
 const express = require('express');
-const router = express.Router();
-const multer = require('multer');
+const http = require('http');
+const socketIo = require('socket.io');
 const path = require('path');
 const mongoose = require('mongoose');
-const Caption = require('./models/Caption'); 
 const captionRoutes = require('./routes/captionRoutes');
-const { generateCaption } = require('./controllers/captionController'); 
+
 const app = express();
-const port = 3000;
+const server = http.createServer(app);
+const io = socketIo(server);
 
-
-// Connection URL
-const mongoURI = 'mongodb://localhost:27017/Project6_2';
-
-// Connect to MongoDB
-mongoose.connect(mongoURI)
+// MongoDB connection
+mongoose.connect('mongodb://localhost:27017/Project6_2') //{ useNewUrlParser: true, useUnifiedTopology: true }
     .then(() => console.log('MongoDB connected'))
     .catch(err => console.error('MongoDB connection error:', err));
 
-// Configure Multer for file uploads
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, path.join(__dirname, '../uploads'));
-    },
-    filename: (req, file, cb) => {
-        cb(null, Date.now() + path.extname(file.originalname));
-    }
-});
-const upload = multer({ storage });
-
-// Middleware for serving static files
+// Serve static files
 app.use(express.static(path.join(__dirname, '../client')));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Using routes
+// Middleware to inject `io` into request
+app.use((req, res, next) => {
+    req.io = io;
+    next();
+});
+
+// Use caption routes
 app.use('/api', captionRoutes);
 
-// Catch-all route for any other requests
-app.use((req, res) => {
-    res.status(404).send('Not Found');
-});
+// Socket.IO connection
+io.on('connection', (socket) => {
+    console.log('A user connected');
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-    console.error('Server error:', err);
-    res.status(500).send('Something broke!');
+    socket.on('newCaption', async (captionText) => {
+        const newCaption = new Caption({ text: captionText });
+        try {
+            await newCaption.save();
+            console.log('Caption saved:', newCaption);
+            socket.emit('captionSaved', newCaption);
+        } catch (error) {
+            console.error('Error saving caption:', error);
+        }
+    });
+
+    socket.on('disconnect', () => {
+        console.log('User disconnected');
+    });
 });
 
 // Start the server
-app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+    console.log(`Server running at http://localhost:${PORT}`);
 });
+
 module.exports = app;
-
-
-
