@@ -4,13 +4,15 @@ const socketIo = require('socket.io');
 const path = require('path');
 const mongoose = require('mongoose');
 const captionRoutes = require('./routes/captionRoutes');
+const cors = require('cors');
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
+app.use(cors());
 
 // MongoDB connection
-mongoose.connect('mongodb://localhost:27017/Project6_2') //{ useNewUrlParser: true, useUnifiedTopology: true }
+mongoose.connect('mongodb://localhost:27017/Project6_2') 
     .then(() => console.log('MongoDB connected'))
     .catch(err => console.error('MongoDB connection error:', err));
 
@@ -31,17 +33,6 @@ app.use('/api', captionRoutes);
 // Socket.IO connection
 io.on('connection', (socket) => {
     console.log('A user connected');
-
-    socket.on('newCaption', async (captionText) => {
-        const newCaption = new Caption({ text: captionText });
-        try {
-            await newCaption.save();
-            console.log('Caption saved:', newCaption);
-            socket.emit('captionSaved', newCaption);
-        } catch (error) {
-            console.error('Error saving caption:', error);
-        }
-    });
 
     socket.on('disconnect', () => {
         console.log('User disconnected');

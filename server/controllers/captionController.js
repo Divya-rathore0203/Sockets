@@ -7,6 +7,9 @@ const generateCaption = (imagePath) => {
 
 // Controller function to handle file upload, generate caption, and save to database
 const saveCaption = async (req, res) => {
+    console.log('saveCaption function triggered');
+    console.log('Uploaded file:', req.file); 
+    
     try {
         if (!req.file) {
             throw new Error('No file uploaded');
@@ -14,6 +17,10 @@ const saveCaption = async (req, res) => {
 
         const imageUrl = `/uploads/${req.file.filename}`;
         const generatedCaption = generateCaption(req.file.path);
+
+        if (!imageUrl || !generatedCaption) {
+            throw new Error('Missing image URL or caption');
+        }
 
         const newCaption = new Caption({
             imageUrl: imageUrl,
@@ -36,5 +43,5 @@ const saveCaption = async (req, res) => {
     }
 };
 
-// Export the `saveCaption` function directly
-module.exports = { saveCaption };
+
+module.exports = { saveCaption, generateCaption };
